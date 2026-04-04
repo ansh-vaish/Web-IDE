@@ -1,36 +1,147 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IDE Project
+
+A browser-based coding playground built with Next.js, NextAuth, Prisma (MongoDB), Monaco Editor, and WebContainer.
+
+Users can sign in, create playgrounds from templates, edit files in-browser, run code in an isolated container, and manage projects from a dashboard.
+
+## Stack
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS 4
+- NextAuth v5 (GitHub + Google OAuth)
+- Prisma + MongoDB
+- Monaco Editor
+- WebContainer API
+- Zustand for playground/editor state
+
+## Features
+
+- OAuth authentication with GitHub and Google
+- Protected dashboard with user-specific playgrounds
+- Create, duplicate, update, star, and delete playgrounds
+- File explorer operations inside playground:
+  - add/rename/delete files and folders
+  - open/close tabs
+  - per-file save and save-all
+- Live preview via WebContainer instance
+- Exit flow from playground back to dashboard with container teardown
+
+## Project Structure
+
+```text
+app/
+	(auth)/auth/sign-in/    # Auth pages
+	(root)/                 # Landing/root pages
+	dashboard/              # Protected dashboard route
+	playground/[id]/        # Editor + file tree + preview
+	api/auth/               # Auth handlers
+	api/template/           # Template API
+
+modules/
+	auth/                   # Auth actions/types/components
+	dashboard/              # Dashboard UI + server actions
+	playground/             # Editor, explorer, file operations, hooks
+	web-containers/         # WebContainer preview + hook
+
+prisma/
+	schema.prisma           # MongoDB models
+```
+
+## Data Model (High Level)
+
+- User, Account, Session managed through NextAuth + Prisma adapter
+- Playground linked to a user
+- TemplateFile stores serialized file tree/content per playground
+- StarMark stores user-to-playground starring
+- ChatMessage model exists for user message history
+
+See prisma/schema.prisma for full schema.
+
+## Environment Variables
+
+Create a `.env` or `.env.local` file in the project root:
+
+```env
+DATABASE_URL="mongodb+srv://..."
+
+AUTH_SECRET="replace-with-strong-secret"
+
+AUTH_GITHUB_ID="..."
+AUTH_GITHUB_SECRET="..."
+
+AUTH_GOOGLE_ID="..."
+AUTH_GOOGLE_SECRET="..."
+```
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Generate Prisma client:
+
+```bash
+npx prisma generate
+```
+
+3. Push schema to MongoDB:
+
+```bash
+npx prisma db push
+```
+
+4. Start development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+- `npm run dev` - Start dev server
+- `npm run build` - Build production app
+- `npm run start` - Run production build
+- `npm run lint` - Run ESLint
 
-To learn more about Next.js, take a look at the following resources:
+## Auth and Routing Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Public route: `/`
+- Auth page: `/auth/sign-in`
+- Protected route: `/dashboard`
+- Middleware redirects unauthenticated users to sign-in
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Route behavior is controlled in `routes.ts` and `middleware.ts`.
 
-## Deploy on Vercel
+## Playground Flow
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Dashboard opens/creates a playground record
+2. Playground page loads saved template content or fetches template JSON
+3. WebContainer boots for live preview
+4. File edits are tracked in state and can be saved back to DB
+5. Exit action tears down container and returns to dashboard
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Troubleshooting
+
+- App fails on startup with `DATABASE_URL is not defined`:
+  - Set `DATABASE_URL` in `.env`/`.env.local`
+- OAuth not working:
+  - Verify provider IDs/secrets and callback URL configuration
+- Prisma client issues:
+  - Re-run `npx prisma generate`
+- No playground data appears:
+  - Confirm the user session exists and DB has playground records
+
+## Notes
+
+- The repository includes starter/template directories used for playground templates.
+- The UI layer uses shadcn-style component patterns under `components/ui`.

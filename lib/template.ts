@@ -1,5 +1,5 @@
 export const templatePaths = {
-  REACT: "/starters-customized/react",
+  REACT: "/starters-main/react",
   NEXTJS: "/starters-main/nextjs",
   EXPRESS: "/starters-main/express-simple",
   VUE: "/starters-main/vue",
