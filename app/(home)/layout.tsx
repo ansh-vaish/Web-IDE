@@ -15,7 +15,7 @@ export default function HomeLayout({
           <div className="h-full max-w-full mx-auto bg-linear-to-b from-zinc-900 to-black rounded-3xl overflow-hidden border border-zinc-800/50 flex flex-col">
             <Header />
             <main className="flex-1 min-h-0">{children}</main>
-            <Footer />
+            {/* <Footer /> */}
           </div>
         </div>
       </div>

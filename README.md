@@ -58,61 +58,6 @@ prisma/
 
 See prisma/schema.prisma for full schema.
 
-## Environment Variables
-
-Create a `.env` or `.env.local` file in the project root:
-
-```env
-DATABASE_URL="mongodb+srv://..."
-
-AUTH_SECRET="replace-with-strong-secret"
-
-AUTH_GITHUB_ID="..."
-AUTH_GITHUB_SECRET="..."
-
-AUTH_GOOGLE_ID="..."
-AUTH_GOOGLE_SECRET="..."
-```
-
-## Getting Started
-
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Generate Prisma client:
-
-```bash
-npx prisma generate
-```
-
-3. Push schema to MongoDB:
-
-```bash
-npx prisma db push
-```
-
-4. Start development server:
-
-```bash
-npm run dev
-```
-
-5. Open:
-
-```text
-http://localhost:3000
-```
-
-## Scripts
-
-- `npm run dev` - Start dev server
-- `npm run build` - Build production app
-- `npm run start` - Run production build
-- `npm run lint` - Run ESLint
-
 ## Auth and Routing Notes
 
 - Public route: `/`
@@ -129,19 +74,3 @@ Route behavior is controlled in `routes.ts` and `middleware.ts`.
 3. WebContainer boots for live preview
 4. File edits are tracked in state and can be saved back to DB
 5. Exit action tears down container and returns to dashboard
-
-## Troubleshooting
-
-- App fails on startup with `DATABASE_URL is not defined`:
-  - Set `DATABASE_URL` in `.env`/`.env.local`
-- OAuth not working:
-  - Verify provider IDs/secrets and callback URL configuration
-- Prisma client issues:
-  - Re-run `npx prisma generate`
-- No playground data appears:
-  - Confirm the user session exists and DB has playground records
-
-## Notes
-
-- The repository includes starter/template directories used for playground templates.
-- The UI layer uses shadcn-style component patterns under `components/ui`.

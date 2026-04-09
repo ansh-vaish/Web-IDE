@@ -2,6 +2,38 @@ import { useState, useEffect, useCallback } from "react";
 import { WebContainer } from "@webcontainer/api";
 import { TemplateFolder } from "@/modules/playground/lib/path-to-json";
 
+let sharedWebContainerInstance: WebContainer | null = null;
+let sharedWebContainerBootPromise: Promise<WebContainer> | null = null;
+
+async function getOrBootWebContainer(): Promise<WebContainer> {
+  if (sharedWebContainerInstance) {
+    return sharedWebContainerInstance;
+  }
+
+  if (!sharedWebContainerBootPromise) {
+    sharedWebContainerBootPromise = WebContainer.boot()
+      .then((instance) => {
+        sharedWebContainerInstance = instance;
+        return instance;
+      })
+      .catch((error) => {
+        sharedWebContainerBootPromise = null;
+        throw error;
+      });
+  }
+
+  return sharedWebContainerBootPromise;
+}
+
+function teardownSharedWebContainer(): void {
+  if (sharedWebContainerInstance) {
+    sharedWebContainerInstance.teardown();
+  }
+
+  sharedWebContainerInstance = null;
+  sharedWebContainerBootPromise = null;
+}
+
 interface UseWebContainerProps {
   templateData: TemplateFolder;
 }
@@ -19,24 +51,28 @@ export const useWebContainer = ({
   templateData,
 }: UseWebContainerProps): UseWebContaierReturn => {
   const [serverUrl, setServerUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(
+    !sharedWebContainerInstance,
+  );
   const [error, setError] = useState<string | null>(null);
-  const [instance, setInstance] = useState<WebContainer | null>(null);
+  const [instance, setInstance] = useState<WebContainer | null>(
+    sharedWebContainerInstance,
+  );
 
   useEffect(() => {
-    let mounted = true;
+    let isCancelled = false;
 
     async function initializeWebContainer() {
       try {
-        const webcontainerInstance = await WebContainer.boot();
+        const webcontainerInstance = await getOrBootWebContainer();
 
-        if (!mounted) return;
+        if (isCancelled) return;
 
         setInstance(webcontainerInstance);
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to initialize WebContainer:", error);
-        if (mounted) {
+        if (!isCancelled) {
           setError(
             error instanceof Error
               ? error.message
@@ -50,10 +86,7 @@ export const useWebContainer = ({
     initializeWebContainer();
 
     return () => {
-      mounted = false;
-      if (instance) {
-        instance.teardown();
-      }
+      isCancelled = true;
     };
   }, []);
 
@@ -83,12 +116,10 @@ export const useWebContainer = ({
   );
 
   const destory = useCallback(() => {
-    if (instance) {
-      instance.teardown();
-      setInstance(null);
-      setServerUrl(null);
-    }
-  }, [instance]);
+    teardownSharedWebContainer();
+    setInstance(null);
+    setServerUrl(null);
+  }, []);
 
   return { serverUrl, isLoading, error, instance, writeFileSync, destory };
 };
