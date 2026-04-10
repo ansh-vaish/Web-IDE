@@ -1,8 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const params = useSearchParams();
   const error = params.get("error");
 
@@ -12,6 +13,10 @@ export default function AuthErrorPage() {
     message = "Please add a public email to your GitHub account and try again.";
   }
 
+  return <AuthErrorCard message={message} />;
+}
+
+function AuthErrorCard({ message }: { message: string }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
       <div className="flex flex-col items-center justify-center gap-4 bg-gray-200 dark:bg-gray-800 p-6 rounded-lg shadow-md">
@@ -22,5 +27,13 @@ export default function AuthErrorPage() {
         </a>
       </div>
     </div>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<AuthErrorCard message="Something went wrong" />}>
+      <AuthErrorContent />
+    </Suspense>
   );
 }
