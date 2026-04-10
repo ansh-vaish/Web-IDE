@@ -19,7 +19,6 @@ import {
   Database,
   FlameIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +33,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import Image from "next/image";
 
 // Define the interface for a single playground item, icon is now a string
 interface PlaygroundData {
@@ -66,14 +64,8 @@ export function DashboardSidebar({
   const recentPlaygrounds = initialPlaygroundData;
 
   return (
-    <Sidebar
-      variant="inset"
-      collapsible="icon"
-      className="border-r border-white/5 text-white"
-    >
-      {/* subtle dark blue texture */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.045] bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.18)_1px,transparent_0)] bg-size-[18px_18px]" />
-
+    <Sidebar variant="inset"  className="rounded-lg">
+      <div className="rounded-lg" />
       {/* Header */}
       <SidebarHeader className="px-3 pt-5 pb-4">
         <div className="flex items-center justify-center">

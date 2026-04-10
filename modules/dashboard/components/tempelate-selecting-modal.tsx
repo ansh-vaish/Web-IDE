@@ -244,9 +244,12 @@ const TemplateSelectionModal = ({
           <>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-[#e93f3f] flex items-center gap-2">
-                {/* <Plus size={24} className="text-[#e93f3f]" /> */}
                 Select a Template
               </DialogTitle>
+              <div className="mt-4 text-sm text-purple-300 border border-purple-500/20 bg-purple-500/5 px-4 py-2 rounded-lg">
+                ⚠️ Currently only Node.js environment is supported. Support for
+                more environments is coming soon.
+              </div>
               <DialogDescription>
                 Choose a template to create your new playground
               </DialogDescription>

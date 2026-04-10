@@ -284,7 +284,7 @@ export function ProjectTable({
                         onClick={() => handleEditClick(project)}
                       >
                         <Edit3 className="h-4 w-4 mr-2" />
-                        Edit Project
+                        Rename Project
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDuplicateProject(project)}

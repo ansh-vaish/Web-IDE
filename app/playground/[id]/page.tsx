@@ -557,7 +557,7 @@ return (
                     >
                       <div className="flex items-center gap-2">
                         <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="max-w-[160px] truncate">
+                        <span className="max-w-40 truncate">
                           {file.filename}.{file.fileExtension}
                         </span>
 

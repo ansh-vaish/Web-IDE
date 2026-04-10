@@ -7,7 +7,7 @@ interface TrailPoint {
   timestamp: number;
 }
 
-export function CursorGlitter() {
+export  function CursorGlitter() {
   const [trail, setTrail] = useState<TrailPoint[]>([]);
   const lastPosRef = useRef({ x: 0, y: 0 });
   const angleRef = useRef(0);

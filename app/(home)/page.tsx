@@ -40,13 +40,9 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-14">
             <button
               onClick={() => router.push("/dashboard")}
-              className="bg-white hover:bg-gray-200 text-black px-8 py-3 rounded-xl font-medium transition"
+              className="bg-gray-100 hover:bg-gray-300 text-black px-8 py-3 rounded-xl font-medium transition hover:cursor-pointer "
             >
               Launch Workspace
-            </button>
-
-            <button className="border border-zinc-700 hover:border-zinc-500 text-white px-8 py-3 rounded-xl transition backdrop-blur-md">
-              Explore Templates →
             </button>
           </div>
         </div>

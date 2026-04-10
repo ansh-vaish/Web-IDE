@@ -17,7 +17,7 @@ interface UserButtonProps {
   user?: Session["user"];
 }
 
-const UserButton = ({ user }: UserButtonProps) => {
+const UserButton = ({ user }: UserButtonProps) => {  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,7 +35,7 @@ const UserButton = ({ user }: UserButtonProps) => {
             />
             <AvatarFallback className="bg-zinc-800 text-zinc-100">
               <User className="size-4" />
-            </AvatarFallback>
+            </AvatarFallback> 
           </Avatar>
         </button>
       </DropdownMenuTrigger>
@@ -60,5 +60,4 @@ const UserButton = ({ user }: UserButtonProps) => {
     </DropdownMenu>
   );
 };
-
 export default UserButton;

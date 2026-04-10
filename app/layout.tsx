@@ -4,7 +4,7 @@ import {Toaster}  from "@/components/ui/sonner";
 export const metadata: Metadata = {
   title: {
     template: "IDE",
-    default: "Code editor for everyone",
+    default: "Trace - Your Cloud IDE",
   },
 };
 

@@ -91,6 +91,34 @@ function SidebarProvider({
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
   }, [isMobile, setOpen, setOpenMobile]);
 
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isToggleShortcut =
+        (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b";
+
+      if (!isToggleShortcut) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      const isTypingTarget =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        target?.isContentEditable;
+
+      if (isTypingTarget) {
+        return;
+      }
+
+      event.preventDefault();
+      toggleSidebar();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSidebar]);
+
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? "expanded" : "collapsed";
@@ -120,7 +148,7 @@ function SidebarProvider({
           } as React.CSSProperties
         }
         className={cn(
-          "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
+          "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar ",
           className,
         )}
         {...props}

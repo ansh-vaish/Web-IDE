@@ -23,6 +23,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       token.name = existingUser.name;
       token.email = existingUser.email;
+      token.image = existingUser.image;
       //@ts-ignore
       token.role = existingUser.role;
 
@@ -37,6 +38,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       if (token.sub && session.user) {
         session.user.role = token.role;
+        session.user.image = token.image as string | null | undefined;
       }
 
       return session;
