@@ -67,6 +67,17 @@ const WebContainerPreview = ({
     );
   };
 
+  const getInstallCommand = async (
+    container: WebContainer,
+  ): Promise<[string, string[]]> => {
+    try {
+      await container.fs.readFile("package-lock.json", "utf8");
+      return ["npm", ["ci"]];
+    } catch {
+      return ["npm", ["install"]];
+    }
+  };
+
   // Reset setup state when forceResetup changes
   useEffect(() => {
     if (forceResetup) {
@@ -194,7 +205,11 @@ const WebContainerPreview = ({
           );
         }
 
-        const installProcess = await instance.spawn("npm", ["install"]);
+        const [installCommand, installArgs] = await getInstallCommand(instance);
+        const installProcess = await instance.spawn(
+          installCommand,
+          installArgs,
+        );
 
         installProcess.output.pipeTo(
           new WritableStream({
