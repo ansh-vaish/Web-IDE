@@ -51,6 +51,12 @@ const AddRepo = () => {
     try {
       setIsLoadingRepos(true);
       const response = await getGithubRepositories();
+
+      if ("error" in response) {
+        toast.error(response.error);
+        return;
+      }
+
       setRepos(response);
 
       if (response.length > 0) {
@@ -74,6 +80,12 @@ const AddRepo = () => {
     try {
       setIsImporting(true);
       const imported = await importGithubRepository(resolvedRepoInput);
+
+      if ("error" in imported) {
+        toast.error(imported.error);
+        return;
+      }
+
       toast.success("Repository imported successfully");
       setIsOpen(false);
       router.refresh();

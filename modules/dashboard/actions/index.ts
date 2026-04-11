@@ -1,7 +1,6 @@
 "use server";
 import { db } from "@/lib/db";
 import { currentUser } from "@/modules/auth/actions";
-import { is } from "date-fns/locale";
 import { revalidatePath } from "next/cache";
 
 type PlaygroundTemplate =
@@ -66,6 +65,14 @@ class GithubApiError extends Error {
     this.status = status;
     this.name = "GithubApiError";
   }
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "An unexpected error occurred";
 }
 
 function parseOwnerAndRepo(input: string): { owner: string; repo: string } {
@@ -213,33 +220,46 @@ function detectTemplate(nodes: GithubTreeNode[]): PlaygroundTemplate {
 export const getGithubRepositories = async () => {
   const user = await currentUser();
   if (!user?.id) {
-    throw new Error("User not authenticated");
+    return { error: "UNAUTHENTICATED" };
   }
 
-  const token = await getGithubAccessToken(user.id);
-  const repos = await githubFetch<GithubRepo[]>(
-    "/user/repos?sort=updated&per_page=100",
-    token,
-  );
+  try {
+    const token = await getGithubAccessToken(user.id);
+    const repos = await githubFetch<GithubRepo[]>(
+      "/user/repos?sort=updated&per_page=100",
+      token,
+    );
 
-  return repos.map((repo) => ({
-    id: repo.id,
-    fullName: repo.full_name,
-    name: repo.name,
-    isPrivate: repo.private,
-    defaultBranch: repo.default_branch,
-    description: repo.description,
-  }));
+    return repos.map((repo) => ({
+      id: repo.id,
+      fullName: repo.full_name,
+      name: repo.name,
+      isPrivate: repo.private,
+      defaultBranch: repo.default_branch,
+      description: repo.description,
+    }));
+  } catch (error) {
+    return { error: getErrorMessage(error) };
+  }
 };
 
 export const importGithubRepository = async (repoInput: string) => {
   const user = await currentUser();
   if (!user?.id) {
-    throw new Error("User not authenticated");
+    return { error: "UNAUTHENTICATED" };
   }
 
   const token = await getGithubAccessTokenOptional(user.id);
-  const { owner, repo } = parseOwnerAndRepo(repoInput);
+  let owner = "";
+  let repo = "";
+
+  try {
+    const parsed = parseOwnerAndRepo(repoInput);
+    owner = parsed.owner;
+    repo = parsed.repo;
+  } catch (error) {
+    return { error: getErrorMessage(error) };
+  }
 
   let repoDetails: GithubRepo;
   try {
@@ -249,24 +269,31 @@ export const importGithubRepository = async (repoInput: string) => {
     );
   } catch (error) {
     if (error instanceof GithubApiError && error.status === 404 && !token) {
-      throw new Error(
-        "Repository not found or private. Connect GitHub to import private repositories.",
-      );
+      return {
+        error:
+          "Repository not found or private. Connect GitHub to import private repositories.",
+      };
     }
 
     if (error instanceof GithubApiError && error.status === 403 && !token) {
-      throw new Error(
-        "GitHub API rate limit reached for anonymous access. Connect GitHub and try again.",
-      );
+      return {
+        error:
+          "GitHub API rate limit reached for anonymous access. Connect GitHub and try again.",
+      };
     }
 
-    throw error;
+    return { error: getErrorMessage(error) };
   }
 
-  const treeResponse = await githubFetch<{ tree: GithubTreeNode[] }>(
-    `/repos/${owner}/${repo}/git/trees/${repoDetails.default_branch}?recursive=1`,
-    token ?? undefined,
-  );
+  let treeResponse: { tree: GithubTreeNode[] };
+  try {
+    treeResponse = await githubFetch<{ tree: GithubTreeNode[] }>(
+      `/repos/${owner}/${repo}/git/trees/${repoDetails.default_branch}?recursive=1`,
+      token ?? undefined,
+    );
+  } catch (error) {
+    return { error: getErrorMessage(error) };
+  }
 
   const fileNodes = treeResponse.tree
     .filter((node) => node.type === "blob")
@@ -275,7 +302,7 @@ export const importGithubRepository = async (repoInput: string) => {
     .slice(0, MAX_FILES);
 
   if (fileNodes.length === 0) {
-    throw new Error("No importable files found in this repository");
+    return { error: "No importable files found in this repository" };
   }
 
   const templateRoot: TemplateFolderNode = {
@@ -284,10 +311,15 @@ export const importGithubRepository = async (repoInput: string) => {
   };
 
   for (const node of fileNodes) {
-    const blob = await githubFetch<{ content?: string; encoding?: string }>(
-      `/repos/${owner}/${repo}/git/blobs/${node.sha}`,
-      token ?? undefined,
-    );
+    let blob: { content?: string; encoding?: string };
+    try {
+      blob = await githubFetch<{ content?: string; encoding?: string }>(
+        `/repos/${owner}/${repo}/git/blobs/${node.sha}`,
+        token ?? undefined,
+      );
+    } catch {
+      continue;
+    }
 
     if (!blob.content || blob.encoding !== "base64") {
       continue;
@@ -307,29 +339,33 @@ export const importGithubRepository = async (repoInput: string) => {
   }
 
   if (templateRoot.items.length === 0) {
-    throw new Error(
-      "Repository does not contain text files that can be imported",
-    );
+    return {
+      error: "Repository does not contain text files that can be imported",
+    };
   }
 
   const template = detectTemplate(fileNodes);
-  const newPlayground = await db.playground.create({
-    data: {
-      title: repoDetails.full_name,
-      description: repoDetails.description ?? "Imported from GitHub",
-      template,
-      userId: user.id,
-      templateFiles: {
-        create: {
-          content: JSON.stringify(templateRoot),
+  try {
+    const newPlayground = await db.playground.create({
+      data: {
+        title: repoDetails.full_name,
+        description: repoDetails.description ?? "Imported from GitHub",
+        template,
+        userId: user.id,
+        templateFiles: {
+          create: {
+            content: JSON.stringify(templateRoot),
+          },
         },
       },
-    },
-    select: { id: true },
-  });
+      select: { id: true },
+    });
 
-  revalidatePath("/dashboard");
-  return newPlayground;
+    revalidatePath("/dashboard");
+    return newPlayground;
+  } catch (error) {
+    return { error: getErrorMessage(error) };
+  }
 };
 
 export const getAllPlaygroundsOfUser = async () => {
@@ -409,7 +445,7 @@ export const duplicatePlaygroundById = async (id: string) => {
       // todo
     });
     if (!originalPlayground) {
-      throw new Error("Playground not found");
+      return { error: "Playground not found" };
     }
     const duplicatedPlayground = await db.playground.create({
       data: {
@@ -430,7 +466,7 @@ export const toggleStarMarked = async (id: string, isMarked: boolean) => {
   const user = await currentUser();
   const userId = user?.id;
   if (!userId) {
-    throw new Error("User not authenticated");
+    return { success: false, error: "User not authenticated", isMarked };
   }
   try {
     if (isMarked) {

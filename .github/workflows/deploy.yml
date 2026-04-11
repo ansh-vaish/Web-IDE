@@ -18,7 +18,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /var/www/Web-IDE
-            git pull origin main
+            git fetch origin
+            git reset --hard origin/main
             npm install
             npm run build
-            pm2 restart web-ide
+            pm2 reload web-ide || pm2 start npm --name "web-ide" -- start
