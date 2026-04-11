@@ -19,12 +19,14 @@ export default async function Layout({
     ANGULAR: "Terminal",
   };
 
-  const formattedPlaygrounds = (importedPlayground ?? []).map((playground) => ({
-    ...playground,
-    name: playground.title,
-    icon: techIconMap[playground.template] || "Code2",
-    starred: playground.Starmark?.[0]?.isMarked || false,
-  }));
+  const formattedPlaygrounds = (importedPlayground ?? []).map(
+    (playground: any) => ({
+      ...playground,
+      name: playground.title,
+      icon: techIconMap[playground.template] || "Code2",
+      starred: playground.Starmark?.[0]?.isMarked || false,
+    }),
+  );
 
   return (
     <TooltipProvider>
