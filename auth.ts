@@ -13,18 +13,50 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user, account }) {
-      if (!token.sub) return token;
+    async jwt({ token, account, user }) {
+      // OAuth login happened
+      if (account && user) {
+        const existingAccount = await db.account.findFirst({
+          where: {
+            userId: user.id,
+            provider: account.provider,
+          },
+        });
+
+        if (existingAccount) {
+          await db.account.update({
+            where: {
+              id: existingAccount.id,
+            },
+
+            data: {
+              access_token: account.access_token,
+
+              expires_at: account.expires_at,
+
+              refresh_token:
+                account.refresh_token ?? existingAccount.refresh_token,
+            },
+          });
+        }
+      }
+
+      // SESSION TOKEN ENRICHMENT
+
+      if (!token.sub) {
+        return token;
+      }
+
       const existingUser = await getUserById(token.sub);
 
-      if (!existingUser) return token;
-
-      const exisitingAccount = await getAccountByUserId(existingUser.id);
+      if (!existingUser) {
+        return token;
+      }
 
       token.name = existingUser.name;
       token.email = existingUser.email;
       token.image = existingUser.image;
-      //@ts-ignore
+
       token.role = existingUser.role;
 
       return token;

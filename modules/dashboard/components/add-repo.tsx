@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { getGithubRepositories, importGithubRepository } from "../actions";
-
+import { signOut } from "next-auth/react";
 type RepoOption = {
   id: number;
   fullName: string;
@@ -50,13 +50,25 @@ const AddRepo = () => {
 
     try {
       setIsLoadingRepos(true);
+
       const response = await getGithubRepositories();
 
       if ("error" in response) {
-        toast.error(response.error);
+        if (response.error === "GitHub account not linked") {
+          toast.error(
+            "Please login with your GitHub account to load repositories.",
+          );
+        } else {
+          toast.error(
+            "GitHub authentication error. Please sign in again using GitHub.",
+            { duration: 4000 },
+          );
+          await new Promise((res) => setTimeout(res, 1200));
+          await signOut({ redirect: false });
+          router.push("/auth/sign-in");
+        }
         return;
       }
-
       setRepos(response);
 
       if (response.length > 0) {
@@ -65,7 +77,18 @@ const AddRepo = () => {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load repositories";
-      toast.error(message);
+
+      if (message === "GitHub account not linked") {
+        toast.error("Please connect your GitHub account to load repositories.");
+      } else {
+        toast.error(
+          "GitHub authentication error. Please sign in again using GitHub.",
+          { duration: 4000 },
+        );
+        await new Promise((res) => setTimeout(res, 1200));
+        await signOut({ redirect: false });
+        router.push("/auth/sign-in");
+      }
     } finally {
       setIsLoadingRepos(false);
     }

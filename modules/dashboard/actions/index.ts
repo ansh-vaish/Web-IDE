@@ -2,6 +2,8 @@
 import { db } from "@/lib/db";
 import { currentUser } from "@/modules/auth/actions";
 import { revalidatePath } from "next/cache";
+import { getValidGithubAccessToken } from "@/lib/oauth/github";
+import { signOut } from "@/auth";
 
 type PlaygroundTemplate =
   | "REACT"
@@ -99,27 +101,13 @@ function parseOwnerAndRepo(input: string): { owner: string; repo: string } {
   return { owner, repo: repoRaw.replace(/\.git$/, "") };
 }
 
-async function getGithubAccessTokenOptional(
-  userId: string,
-): Promise<string | null> {
-  const account = await db.account.findFirst({
-    where: {
-      userId,
-      provider: "github",
-    },
-    select: { access_token: true },
-  });
-
-  return account?.access_token ?? null;
-}
-
-async function getGithubAccessToken(userId: string): Promise<string> {
-  const accessToken = await getGithubAccessTokenOptional(userId);
-  if (!accessToken) {
-    throw new Error("GitHub account is not connected or token is missing");
+async function getGithubAccessToken(userId: string): Promise<string | undefined> {
+  try {
+    const token = await getValidGithubAccessToken(userId);
+    return token;
+  } catch (error) {
+    throw error;
   }
-
-  return accessToken;
 }
 
 async function githubFetch<T>(endpoint: string, token?: string): Promise<T> {
@@ -222,7 +210,7 @@ export const getGithubRepositories = async () => {
   if (!user?.id) {
     return { error: "UNAUTHENTICATED" };
   }
-
+  
   try {
     const token = await getGithubAccessToken(user.id);
     const repos = await githubFetch<GithubRepo[]>(
@@ -249,7 +237,7 @@ export const importGithubRepository = async (repoInput: string) => {
     return { error: "UNAUTHENTICATED" };
   }
 
-  const token = await getGithubAccessTokenOptional(user.id);
+  const token = await getGithubAccessToken(user.id);
   let owner = "";
   let repo = "";
 
