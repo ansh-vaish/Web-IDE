@@ -64,7 +64,7 @@ export function DashboardSidebar({
   const recentPlaygrounds = initialPlaygroundData;
 
   return (
-    <Sidebar variant="inset"  className="rounded-lg">
+    <Sidebar variant="inset" className="rounded-lg">
       <div className="rounded-lg" />
       {/* Header */}
       <SidebarHeader className="px-3 pt-5 pb-4">

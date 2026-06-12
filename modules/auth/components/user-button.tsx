@@ -1,4 +1,5 @@
 "use client";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,42 +18,52 @@ interface UserButtonProps {
   user?: Session["user"];
 }
 
-const UserButton = ({ user }: UserButtonProps) => {  
+const UserButton = ({ user }: UserButtonProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
           className={cn(
-            "relative rounded-full border border-zinc-700/60 bg-zinc-900/70 p-0.5 transition hover:border-zinc-500/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/60",
+            "group relative rounded-full border border-white/10 bg-white/3 p-0.75 backdrop-blur-md transition-all duration-200 hover:border-white/20 hover:bg-white/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20",
           )}
           aria-label="Open user menu"
         >
-          <Avatar size="lg" className="ring-1 ring-zinc-700/40">
+          <div className="absolute inset-0 rounded-full bg-linear-to-b from-white/10 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+
+          <Avatar className="h-10 w-10 ring-1 ring-white/10">
             <AvatarImage
               src={user?.image ?? undefined}
               alt={user?.name ?? "User avatar"}
             />
-            <AvatarFallback className="bg-zinc-800 text-zinc-100">
-              <User className="size-4" />
-            </AvatarFallback> 
+
+            <AvatarFallback className="bg-zinc-900 text-zinc-100">
+              <User className="h-4 w-4" />
+            </AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="end"
-        className="mr-4 w-56 rounded-xl border border-zinc-700/50 bg-zinc-900/95 p-1.5 text-zinc-200 backdrop-blur-md"
+        sideOffset={8}
+        className="w-60 rounded-2xl border border-white/10 bg-black/95 p-2 text-white shadow-2xl backdrop-blur-xl overflow-hidden"
       >
-        <DropdownMenuItem className="pointer-events-none rounded-lg text-zinc-300 focus:bg-transparent focus:text-zinc-300">
-          <span className="truncate text-sm">
+        <div className="px-3 py-2">
+          <p className="truncate text-sm font-medium text-white">
+            {user?.name ?? "User"}
+          </p>
+
+          <p className="truncate text-xs text-gray-400">
             {user?.email ?? "Signed in user"}
-          </span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-zinc-700/60" />
+          </p>
+        </div>
+
+        <DropdownMenuSeparator className="my-1 bg-white/10" />
+
         <LogoutButton>
-          <DropdownMenuItem className="rounded-lg focus:bg-gray-300 ">
-            <LogOut className="mr-2 h-4 w-4" />
+          <DropdownMenuItem className="group cursor-pointer rounded-xl px-3 py-2.5 text-sm text-gray-300 transition-colors focus:bg-white/10 focus:text-white">
+            <LogOut className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
             Logout
           </DropdownMenuItem>
         </LogoutButton>
@@ -60,4 +71,5 @@ const UserButton = ({ user }: UserButtonProps) => {
     </DropdownMenu>
   );
 };
+
 export default UserButton;
